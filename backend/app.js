@@ -1,6 +1,7 @@
 // SETUP
 const express = require("express");
 const bodyParser = require("body-parser");
+const mongoose = require("mongoose");
 
 const placesRoutes = require("./routes/places-routes");
 const usersRoutes = require("./routes/users-routes");
@@ -26,4 +27,14 @@ app.use((error, req, res, next) => {
 });
 
 // LISTEN
-app.listen(5000);
+mongoose
+  .connect(
+    "mongodb+srv://neyir:123@cluster0.ver41pf.mongodb.net/places?retryWrites=true&w=majority"
+  )
+  .then(() => {
+    app.listen(5000);
+  })
+  .catch((error) => {
+    console.log(error);
+  });
+
