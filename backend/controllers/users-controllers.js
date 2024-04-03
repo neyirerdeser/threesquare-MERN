@@ -15,16 +15,15 @@ const User = require("../models/user");
 const getUsers = async (req, res, next) => {
   let users;
   try {
-    users = await User.find();
+    users = await User.find({}, "-password"); // does not display their passwords
   } catch (error) {
     return next(new HttpError("could not find users", 500));
   }
 
-  if (!users || users.length === 0)
-    return next(new HttpError("no users exist", 404));
+  if (users.length === 0) return next(new HttpError("no users exist", 404));
   // next must be used if running async funcs. // returning so that the rest doesnt run
 
-  res.json({ users });
+  res.json({ users: users.map(user=>user.toObject({getters:true})) });
 };
 
 const signup = async (req, res, next) => {
@@ -32,13 +31,13 @@ const signup = async (req, res, next) => {
     return next(new HttpError("invalid inputs", 422));
 
   const { username, email, password } = req.body;
-  let existingUser;
-  try {
-    existingUser = await User.findOne({ email: email });
-  } catch (error) {
-    return next(new HttpError("couldnt check existing user", 500));
-  }
-  if (existingUser) return next(new HttpError("user already exists!", 422)); // invalid user input
+  // let existingUser;
+  // try {
+  //   existingUser = await User.findOne({ email: email });
+  // } catch (error) {
+  //   return next(new HttpError("couldnt check existing user", 500));
+  // }
+  // if (existingUser) return next(new HttpError("user already exists!", 422)); // invalid user input
 
   const createdUser = new User({
     name: username,
