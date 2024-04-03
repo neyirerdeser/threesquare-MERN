@@ -5,6 +5,7 @@ const HttpError = require("../models/http-error");
 const getCoordsForAdress = require("../util/location");
 const Place = require("../models/place");
 
+/*
 let DUMMY_PLACES = [
   {
     id: "p1",
@@ -29,18 +30,11 @@ let DUMMY_PLACES = [
     creator: "u1",
   },
 ];
+*/
 
 const getPlaceById = async (req, res, next) => {
   const placeId = req.params.pid; // { pid: p1 }
-  let place;
-  try {
-    place = await Place.findById(placeId);
-  } catch (error) {
-    return next(new HttpError("something went wrong", 500));
-  }
-
-  if (!place) return next(new HttpError("could not find said place", 404));
-
+  let place = await findPlace(placeId);
   res.json({ place: place.toObject({ getters: true }) }); // { place } => { place: place } // getters make the id readable in this case
 };
 
@@ -49,7 +43,6 @@ const getPlacesByUserId = async (req, res, next) => {
   let places;
   try {
     places = await Place.find({ creator: userId });
-    console.log("TEST",places)
   } catch (error) {
     return next(new HttpError("could not find places for the user", 500));
   }
@@ -58,7 +51,9 @@ const getPlacesByUserId = async (req, res, next) => {
     return next(new HttpError("no places exist for the user", 404));
   // next must be used if running async funcs. // returning so that the rest doesnt run
 
-  res.json({ places });
+  res.json({
+    places: places.map((place) => place.toObject({ getters: true })),
+  });
 };
 
 const createPlace = async (req, res, next) => {
@@ -92,30 +87,47 @@ const createPlace = async (req, res, next) => {
   res.status(201).json({ place: createdPlace });
 };
 
-const updatePlaceById = (req, res, next) => {
+const updatePlaceById = async (req, res, next) => {
   if (!validationResult(req).isEmpty())
     throw new HttpError("invalid inputs", 422);
 
   const placeId = req.params.pid;
   const { title, desc } = req.body;
 
-  const updatedPlace = { ...DUMMY_PLACES.find((p) => p.id === placeId) }; // copies the original with all attributes
-  const placeIndex = DUMMY_PLACES.findIndex((p) => p.id === placeId);
+  let place = await findPlace(placeId);
 
-  updatedPlace.title = title;
-  updatedPlace.desc = desc;
+  place.title = title || place.title;
+  place.description = desc || place.description;
 
-  DUMMY_PLACES[placeIndex] = updatedPlace;
-  res.status(200).json(updatedPlace);
+  try {
+    await place.save();
+  } catch (error) {
+    return next(new HttpError("couldnt update place", 500));
+  }
+  res.status(200).json({ place: place.toObject({ getters: true }) });
 };
 
-const deletePlaceById = (req, res, next) => {
+const deletePlaceById = async (req, res, next) => {
   const placeId = req.params.pid;
-  const deletedPlace = DUMMY_PLACES.find((p) => p.id === placeId);
-  if (!deletedPlace) throw new HttpError("could not find said place", 404);
-  DUMMY_PLACES = DUMMY_PLACES.filter((p) => p !== deletedPlace);
-  // DUMMY_PLACES = DUMMY_PLACES.filter((p) => p.id !== placeId); // wouldve been a one-line solution but i wanted to return deleted place in my json
-  res.status(200).json(deletedPlace);
+
+  try {
+    await Place.deleteOne({ _id: placeId });
+  } catch (error) {
+    return next(new HttpError("something went wrong", 500));
+  }
+
+  res.status(200).json({ message: "place deleted" });
+};
+
+const findPlace = async (placeId) => {
+  let place;
+  try {
+    place = await Place.findById(placeId);
+  } catch (error) {
+    return next(new HttpError("something went wrong", 500));
+  }
+  if (!place) return next(new HttpError("could not find said place", 404));
+  return place;
 };
 
 exports.getPlaceById = getPlaceById;

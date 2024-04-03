@@ -1,5 +1,5 @@
 const express = require("express");
-const { check } = require("express-validator");
+const { check, oneOf } = require("express-validator");
 const placesControllers = require("../controllers/places-controllers");
 
 const router = express.Router();
@@ -9,7 +9,7 @@ router.get("/user/:uid", placesControllers.getPlacesByUserId);
 router.get("/:pid", placesControllers.getPlaceById);
 router.patch(
   "/:pid",
-  [check("title").not().isEmpty(), check("desc").isLength({ min: 5 })],
+  [oneOf([check("title").not().isEmpty(), check("desc").isLength({ min: 5 })])],
   placesControllers.updatePlaceById
 );
 router.delete("/:pid", placesControllers.deletePlaceById);
