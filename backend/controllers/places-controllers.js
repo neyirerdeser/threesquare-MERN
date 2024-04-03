@@ -34,7 +34,13 @@ let DUMMY_PLACES = [
 
 const getPlaceById = async (req, res, next) => {
   const placeId = req.params.pid; // { pid: p1 }
-  let place = await findPlace(placeId);
+  let place;
+  try {
+    place = await Place.findById(placeId);
+  } catch (error) {
+    return next(new HttpError("something went wrong", 500));
+  }
+  if (!place) return next(new HttpError("could not find said place", 404));
   res.json({ place: place.toObject({ getters: true }) }); // { place } => { place: place } // getters make the id readable in this case
 };
 
@@ -94,7 +100,13 @@ const updatePlaceById = async (req, res, next) => {
   const placeId = req.params.pid;
   const { title, desc } = req.body;
 
-  let place = await findPlace(placeId);
+  let place;
+  try {
+    place = await Place.findById(placeId);
+  } catch (error) {
+    return next(new HttpError("something went wrong", 500));
+  }
+  if (!place) return next(new HttpError("could not find said place", 404));
 
   place.title = title || place.title;
   place.description = desc || place.description;
@@ -119,16 +131,6 @@ const deletePlaceById = async (req, res, next) => {
   res.status(200).json({ message: "place deleted" });
 };
 
-const findPlace = async (placeId) => {
-  let place;
-  try {
-    place = await Place.findById(placeId);
-  } catch (error) {
-    return next(new HttpError("something went wrong", 500));
-  }
-  if (!place) return next(new HttpError("could not find said place", 404));
-  return place;
-};
 
 exports.getPlaceById = getPlaceById;
 exports.getPlacesByUserId = getPlacesByUserId;
