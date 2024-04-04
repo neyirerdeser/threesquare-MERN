@@ -23,7 +23,7 @@ const getUsers = async (req, res, next) => {
   if (users.length === 0) return next(new HttpError("no users exist", 404));
   // next must be used if running async funcs. // returning so that the rest doesnt run
 
-  res.json({ users: users.map(user=>user.toObject({getters:true})) });
+  res.json({ users: users.map((user) => user.toObject({ getters: true })) });
 };
 
 const signup = async (req, res, next) => {
@@ -43,6 +43,7 @@ const signup = async (req, res, next) => {
     name: username,
     email,
     password,
+    places: [],
   });
 
   try {

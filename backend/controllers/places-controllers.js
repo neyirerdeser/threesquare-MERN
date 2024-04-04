@@ -1,9 +1,11 @@
 const uuid = require("uuid").v4; // versions are different kinds of ids, v4 has a timestamp component in it
 const { validationResult } = require("express-validator");
+const mongoose = require("mongoose");
 
 const HttpError = require("../models/http-error");
 const getCoordsForAdress = require("../util/location");
 const Place = require("../models/place");
+const User = require("../models/user");
 
 /*
 let DUMMY_PLACES = [
@@ -46,19 +48,19 @@ const getPlaceById = async (req, res, next) => {
 
 const getPlacesByUserId = async (req, res, next) => {
   const userId = req.params.uid;
-  let places;
+  let user;
   try {
-    places = await Place.find({ creator: userId });
+    user = await User.findById(userId).populate('places');
   } catch (error) {
-    return next(new HttpError("could not find places for the user", 500));
+    return next(new HttpError("something went wrong", 500));
   }
 
-  if (!places || places.length === 0)
-    return next(new HttpError("no places exist for the user", 404));
+  if (!user || user.places.length === 0)
+    return next(new HttpError("no places exist for such user", 404));
   // next must be used if running async funcs. // returning so that the rest doesnt run
 
   res.json({
-    places: places.map((place) => place.toObject({ getters: true })),
+    places: user.places.map((place) => place.toObject({ getters: true })),
   });
 };
 
@@ -74,6 +76,15 @@ const createPlace = async (req, res, next) => {
   } catch (error) {
     return next(error);
   }
+
+  let loggedUser;
+  try {
+    loggedUser = await User.findById(creator);
+  } catch (error) {
+    return next(new HttpError("user check failed", 500));
+  }
+  if (!loggedUser) return next(new HttpError("no such user", 404));
+  console.log(loggedUser);
   const createdPlace = new Place({
     // id: uuid(),
     title,
@@ -81,14 +92,18 @@ const createPlace = async (req, res, next) => {
     address,
     location: coordinates,
     creator,
-    image:
-      "https://upload.wikimedia.org/wikipedia/commons/thumb/2/26/Sobá.jpg/1280px-Sobá.jpg",
   });
-  // DUMMY_PLACES.push(createdPlace); // unshift(createdPlace) if you want it to be the first item
+  console.log(createdPlace);
   try {
-    await createdPlace.save();
+    // IMPORTANT: transaction requires that the collection is pre-existing (i.e places for Place item to be saved)
+    const session = await mongoose.startSession();
+    session.startTransaction();
+    await createdPlace.save({ session: session });
+    loggedUser.places.push(createdPlace); // this is a mongoose push // only adds the id
+    await loggedUser.save({ session });
+    await session.commitTransaction();
   } catch (error) {
-    return next(new HttpError("could not create place", 500));
+    return next(new HttpError("could not create place " && error, 500));
   }
   res.status(201).json({ place: createdPlace });
 };
@@ -121,16 +136,27 @@ const updatePlaceById = async (req, res, next) => {
 
 const deletePlaceById = async (req, res, next) => {
   const placeId = req.params.pid;
+  let placeToDelete;
+  try {
+    placeToDelete = await Place.findById(placeId).populate("creator");
+  } catch (error) {
+    return next(new HttpError("something went wrong1", 500));
+  }
+  if (!placeToDelete) return next(new HttpError("place does not exist", 404));
 
   try {
-    await Place.deleteOne({ _id: placeId });
+    const session = await mongoose.startSession();
+    await session.startTransaction();
+    placeToDelete.creator.places.pull(placeToDelete);
+    await placeToDelete.creator.save({session});
+    await placeToDelete.deleteOne({ session });
+    await session.commitTransaction();
   } catch (error) {
     return next(new HttpError("something went wrong", 500));
   }
 
   res.status(200).json({ message: "place deleted" });
 };
-
 
 exports.getPlaceById = getPlaceById;
 exports.getPlacesByUserId = getPlacesByUserId;
