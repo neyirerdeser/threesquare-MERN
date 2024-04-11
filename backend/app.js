@@ -7,6 +7,7 @@ const placesRoutes = require("./routes/places-routes");
 const usersRoutes = require("./routes/users-routes");
 const HttpError = require("./models/http-error");
 
+require("dotenv").config(); // for environment variables
 const app = express();
 
 // MIDDLEWARE
@@ -28,13 +29,10 @@ app.use((error, req, res, next) => {
 
 // LISTEN
 mongoose
-  .connect(
-    "mongodb+srv://neyir:123@cluster0.ver41pf.mongodb.net/places?retryWrites=true&w=majority"
-  )
+  .connect(process.env.MONGO_URI)
   .then(() => {
     app.listen(5000);
   })
   .catch((error) => {
     console.log(error);
   });
-

@@ -4,9 +4,10 @@ import "./Map.css";
 
 const Map = (props) => {
   const mapRef = useRef();
-  const  {center, zoom}  = props;
+  const { center, zoom } = props;
 
-  useEffect(() => { // runs after JSX renders
+  useEffect(() => {
+    // runs after JSX renders
     // const { Map } = google.maps.importLibrary("maps");
     const map = new window.google.maps.Map(mapRef.current, {
       center: center,

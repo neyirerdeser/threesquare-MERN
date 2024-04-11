@@ -27,7 +27,7 @@
     <title>React App</title>
     <script
       async
-      src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDj92o4CKzWc7Wuzl7D5W5jaNJystT-4o0"
+      src="https://maps.googleapis.com/maps/api/js?key=%REACT_APP_GOOGLE_API_KEY%"
       defer
     ></script>
     <!-- <script>
@@ -66,7 +66,7 @@
           ? console.warn(p + " only loads once. Ignoring:", g)
           : (d[l] = (f, ...n) => r.add(f) && u().then(() => d[l](f, ...n)));
       })({
-        key: "AIzaSyDUpOrhEFSgm9oVRUEMx8hn5_5ysEnsK74",
+        key: "%REACT_APP_GOOGLE_API_KEY%",
         v: "weekly",
         // Use the 'v' parameter to indicate the version to use (weekly, beta, alpha, etc.).
         // Add other bootstrap parameters as needed, using camel case.
