@@ -14,7 +14,7 @@ const getPlaceById = async (req, res, next) => {
   try {
     place = await Place.findById(placeId);
   } catch (error) {
-    return next(new HttpError(error, 500));
+    return next(new HttpError(error.message, 500));
   }
   if (!place) return next(new HttpError("could not find said place", 404));
 
@@ -28,7 +28,7 @@ const getPlacesByUserId = async (req, res, next) => {
   try {
     user = await User.findById(userId).populate("places");
   } catch (error) {
-    return next(new HttpError(error, 500));
+    return next(new HttpError(error.message, 500));
   }
   if (!user || user.places.length === 0)
     return next(new HttpError("no places exist for such user", 404));
@@ -55,7 +55,7 @@ const createPlace = async (req, res, next) => {
   try {
     loggedUser = await User.findById(creator);
   } catch (error) {
-    return next(new HttpError(error, 500));
+    return next(new HttpError(error.message, 500));
   }
   if (!loggedUser) return next(new HttpError("no such user", 404));
 
@@ -76,7 +76,7 @@ const createPlace = async (req, res, next) => {
     await loggedUser.save({ session });
     await session.commitTransaction();
   } catch (error) {
-    return next(new HttpError(error, 500));
+    return next(new HttpError(error.message, 500));
   }
 
   res.status(201).json({ place: createdPlace });
@@ -93,7 +93,7 @@ const updatePlaceById = async (req, res, next) => {
   try {
     place = await Place.findById(placeId);
   } catch (error) {
-    return next(new HttpError(error, 500));
+    return next(new HttpError(error.message, 500));
   }
   if (!place) return next(new HttpError("could not find said place", 404));
 
@@ -103,7 +103,7 @@ const updatePlaceById = async (req, res, next) => {
   try {
     await place.save();
   } catch (error) {
-    return next(new HttpError(error, 500));
+    return next(new HttpError(error.message, 500));
   }
 
   res.status(200).json({ place: place.toObject({ getters: true }) });
@@ -116,7 +116,7 @@ const deletePlaceById = async (req, res, next) => {
   try {
     placeToDelete = await Place.findById(placeId).populate("creator");
   } catch (error) {
-    return next(new HttpError(error, 500));
+    return next(new HttpError(error.message, 500));
   }
   if (!placeToDelete) return next(new HttpError("place does not exist", 404));
 
@@ -128,7 +128,7 @@ const deletePlaceById = async (req, res, next) => {
     await placeToDelete.deleteOne({ session });
     await session.commitTransaction();
   } catch (error) {
-    return next(new HttpError(error, 500));
+    return next(new HttpError(error.message, 500));
   }
 
   res.status(200).json({ message: "place deleted" });

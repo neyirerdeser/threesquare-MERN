@@ -7,7 +7,7 @@ const router = express.Router();
 router.post(
   "/signup",
   [
-    check("username").not().isEmpty(),
+    check("name").not().isEmpty(),
     check("email").normalizeEmail().isEmail(), // eMail@gooGLE.com -> email@google.com
     check('password').isLength(6)
   ],

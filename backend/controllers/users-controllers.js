@@ -8,7 +8,7 @@ const getUsers = async (req, res, next) => {
   try {
     users = await User.find({}, "-password"); // does not display their passwords
   } catch (error) {
-    return next(new HttpError("could not find users", 500));
+    return next(new HttpError(error.message, 500));
   }
   if (users.length === 0) return next(new HttpError("no users exist", 404));
 
@@ -19,10 +19,10 @@ const signup = async (req, res, next) => {
   if (!validationResult(req).isEmpty())
     return next(new HttpError("invalid inputs", 422));
 
-  const { username, email, password } = req.body;
+  const { name, email, password } = req.body;
 
   const createdUser = new User({
-    name: username,
+    name,
     email,
     password,
     places: [],
@@ -31,7 +31,9 @@ const signup = async (req, res, next) => {
   try {
     await createdUser.save();
   } catch (error) {
-    return next(new HttpError(error, 500));
+    if (error.message.includes("duplicate key error"))
+      return next(new HttpError("user already exists, login instead?", 422));
+    return next(new HttpError(error.message, 500));
   }
 
   res.status(201).json({ user: createdUser });
@@ -44,12 +46,12 @@ const login = async (req, res, next) => {
   try {
     user = await User.findOne({ email: email });
   } catch (error) {
-    return next(new HttpError(error, 500));
+    return next(new HttpError(error.message, 500));
   }
   if (!user || user.password !== password)
     return next(new HttpError("credentials not matching", 401)); // failed auth
 
-  res.json({ message: "logged in!" });
+  res.json({ user });
 };
 
 exports.getUsers = getUsers;

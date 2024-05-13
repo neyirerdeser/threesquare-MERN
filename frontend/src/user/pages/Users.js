@@ -1,18 +1,37 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
+import { useHttpClient } from "../../shared/hooks/http-hook";
 
 import UsersList from "../components/UsersList";
+import ErrorModal from "../../shared/components/UIElements/ErrorModal";
+import LoadingSpinner from "../../shared/components/UIElements/LoadingSpinner";
 
 const Users = () => {
-  const USERS = [
-    {
-      id: "u1",
-      name: "neyir e.",
-      image:
-        "https://media.gettyimages.com/id/1399306033/vector/new-year-rabbit-paperart.jpg?s=1024x1024&w=gi&k=20&c=XelSlj9TWzEQME0eoAuURk6IeGy86J_Z0KYwqXQH1ew=",
-      places: 2,
-    },
-  ];
-  return <UsersList items={USERS} />;
+  const { isLoading, error, sendRequest, clearError } = useHttpClient();
+  const [loadedUsers, setLoadedUsers] = useState();
+
+  // the function useEffect takes as argument should not be async, we dont want promises
+  // insterad we use an "IIFE" (immediately invoked function expression) <iffy>
+  useEffect(() => {
+    const fetchUsers = async () => {
+      try{
+        const responseData = await sendRequest("http://localhost:5000/api/users");
+        setLoadedUsers(responseData.users)
+      }catch(e){}
+    };
+    fetchUsers();
+  }, [sendRequest]);
+
+  return (
+    <React.Fragment>
+      <ErrorModal error={error} onClear={clearError} />
+      {isLoading && (
+        <div className="center">
+          <LoadingSpinner />
+        </div>
+      )}
+      {!isLoading && loadedUsers && <UsersList items={loadedUsers} />}
+    </React.Fragment>
+  );
 };
 
 export default Users;
