@@ -7,6 +7,7 @@ import Button from "../../shared/components/FormElements/Button";
 import Card from "../../shared/components/UIElements/Card";
 import ErrorModal from "../../shared/components/UIElements/ErrorModal";
 import LoadingSpinner from "../../shared/components/UIElements/LoadingSpinner";
+import ImageUpload from "../../shared/components/FormElements/ImageUpload";
 import {
   VALIDATOR_EMAIL,
   VALIDATOR_MINLENGTH,
@@ -17,8 +18,9 @@ import "./Auth.css";
 
 const Auth = () => {
   const auth = useContext(AuthContext);
-  const [isLoginMode, setIsLoginMode] = useState(true); // the mode is login or not (ie signup)
+  const [isLoginMode, setIsLoginMode] = useState(false); // the mode is login or not (ie signup)
   const { isLoading, error, sendRequest, clearError } = useHttpClient();
+  const defaultImage = 'http://localhost:5000/uploads/images/default-user.png';
   const [formState, inputHandler, setFormData] = useForm(
     {
       email: {
@@ -28,6 +30,10 @@ const Auth = () => {
       password: {
         value: "",
         isValid: false,
+      },
+      image: {
+        value: null,
+        isValid: true,
       },
     },
     false
@@ -49,15 +55,16 @@ const Auth = () => {
           { "Content-Type": "application/json" }
         );
       } else {
+        const formData = new FormData();
+        formData.append("name", formState.inputs.name.value);
+        formData.append("email", formState.inputs.email.value);
+        formData.append("password", formState.inputs.password.value);
+        formData.append("image", formState.inputs.image.value);
+
         responseData = await sendRequest(
           "http://localhost:5000/api/users/signup",
           "POST",
-          JSON.stringify({
-            name: formState.inputs.name.value,
-            email: formState.inputs.email.value,
-            password: formState.inputs.password.value,
-          }),
-          { "Content-Type": "application/json" }
+          formData
         );
       }
       auth.login(responseData.user._id);
@@ -66,21 +73,27 @@ const Auth = () => {
 
   const switchModeHandler = () => {
     if (!isLoginMode) {
-      // so we're about to SWITCH to login mode
+      // switching to login
       setFormData(
         {
           ...formState.inputs,
           name: undefined,
+          image: undefined,
         },
         formState.inputs.email.isValid && formState.inputs.password.isValid
       );
     } else {
+      // switching to signup
       setFormData(
         {
           ...formState.inputs,
           name: {
             value: "",
             isValid: false,
+          },
+          image: {
+            value: null,
+            isValid: true,
           },
         },
         false
@@ -94,7 +107,12 @@ const Auth = () => {
       <ErrorModal error={error} onClear={clearError} />
       <Card className="authentication">
         {isLoading && <LoadingSpinner asOverlay />}
-        <h1>login please</h1>
+        {isLoginMode ? <h1>login please</h1> : <h1>signup</h1>}
+        <Button center inverse onClick={switchModeHandler}>
+          {isLoginMode
+            ? "no account? sign up!"
+            : "already have an account? login!"}
+        </Button>
         <form className="authentication form" onSubmit={authSubmitHandler}>
           {!isLoginMode && (
             <Input
@@ -125,15 +143,13 @@ const Auth = () => {
             errorText="enter your password of at least 6 length"
             onInput={inputHandler}
           />
+          {!isLoginMode && (
+            <ImageUpload center id="image" onInput={inputHandler} initialValue={defaultImage}/>
+          )}
           <Button type="submit" disabled={!formState.isValid}>
             {isLoginMode ? "login" : "sign up"}
           </Button>
         </form>
-        <Button inverse onClick={switchModeHandler}>
-          {isLoginMode
-            ? "no account? sign up!"
-            : "already have an account? login!"}
-        </Button>
       </Card>
     </React.Fragment>
   );

@@ -9,6 +9,7 @@ import Input from "../../shared/components/FormElements/Input";
 import Button from "../../shared/components/FormElements/Button";
 import ErrorModal from "../../shared/components/UIElements/ErrorModal";
 import LoadingSpinner from "../../shared/components/UIElements/LoadingSpinner";
+import ImageUpload from "../../shared/components/FormElements/ImageUpload";
 import {
   VALIDATOR_MINLENGTH,
   VALIDATOR_REQUIRE,
@@ -18,6 +19,7 @@ import "./PlaceForm.css";
 const NewPlace = () => {
   const auth = useContext(AuthContext); // sets up a listener
   const { isLoading, error, sendRequest, clearError } = useHttpClient();
+  const defaultImage = 'http://localhost:5000/uploads/images/default-place.jpeg'
   const [formState, inputHandler] = useForm(
     {
       title: {
@@ -32,27 +34,31 @@ const NewPlace = () => {
         value: "",
         isValid: false,
       },
+      image: {
+        value: null,
+        isValid: true,
+      },
     },
     false
   );
 
   const history = useHistory();
   const placeSubmitHandler = async (event) => {
-    //  const { title, desc, address, creator } = req.body;
     event.preventDefault();
     try {
+      const formData = new FormData();
+      formData.append("title", formState.inputs.title.value);
+      formData.append("description", formState.inputs.description.value);
+      formData.append("address", formState.inputs.address.value);
+      formData.append("creator", auth.userId);
+      formData.append("image", formState.inputs.image.value);
+      
       await sendRequest(
         "http://localhost:5000/api/places",
         "POST",
-        JSON.stringify({
-          title: formState.inputs.title.value,
-          desc: formState.inputs.description.value,
-          address: formState.inputs.address.value,
-          creator: auth.userId,
-        }),
-        { "Content-Type": "application/json" }
+        formData
       );
-      history.push('/');
+      history.push("/");
     } catch (e) {}
   };
 
@@ -86,6 +92,8 @@ const NewPlace = () => {
           errorText="enter valid adress"
           onInput={inputHandler}
         />
+        <ImageUpload center id="image" onInput={inputHandler} initialValue={defaultImage}/>
+
         <Button type="submit" disabled={!formState.isValid}>
           add place
         </Button>
