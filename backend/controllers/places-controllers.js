@@ -1,5 +1,6 @@
 const { validationResult } = require("express-validator");
 const mongoose = require("mongoose");
+const fs = require("fs");
 
 const getCoordsForAdress = require("../util/location");
 
@@ -42,7 +43,7 @@ const createPlace = async (req, res, next) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) return next(new HttpError("invalid inputs", 422)); // unprocessible entry
 
-  const { title, desc, address, creator } = req.body;
+  const { title, description, address, creator } = req.body;
 
   let coordinates;
   try {
@@ -61,10 +62,11 @@ const createPlace = async (req, res, next) => {
 
   const createdPlace = new Place({
     title,
-    description: desc,
+    description: description,
     address,
     location: coordinates,
     creator,
+    image: req.file ? req.file.path : undefined,
   });
 
   try {
@@ -87,26 +89,31 @@ const updatePlaceById = async (req, res, next) => {
     throw new HttpError("invalid inputs", 422);
 
   const placeId = req.params.pid;
-  const { title, desc } = req.body;
+  const { title, description } = req.body;
 
-  let place;
+  let placeToUpdate;
   try {
-    place = await Place.findById(placeId);
+    placeToUpdate = await Place.findById(placeId);
   } catch (error) {
     return next(new HttpError(error.message, 500));
   }
-  if (!place) return next(new HttpError("could not find said place", 404));
+  if (!placeToUpdate)
+    return next(new HttpError("could not find said place", 404));
 
-  place.title = title || place.title;
-  place.description = desc || place.description;
+  if (placeToUpdate.image !== "uploads/images.default-place.jpeg")
+    fs.unlink(placeToUpdate.image, (e) => {if(e) console.log(e)});
+
+  placeToUpdate.title = title || placeToUpdate.title;
+  placeToUpdate.description = description || placeToUpdate.description;
+  placeToUpdate.image = req.file ? req.file.path : placeToUpdate.image;
 
   try {
-    await place.save();
+    await placeToUpdate.save();
   } catch (error) {
     return next(new HttpError(error.message, 500));
   }
 
-  res.status(200).json({ place: place.toObject({ getters: true }) });
+  res.status(200).json({ place: placeToUpdate.toObject({ getters: true }) });
 };
 
 const deletePlaceById = async (req, res, next) => {
@@ -120,6 +127,8 @@ const deletePlaceById = async (req, res, next) => {
   }
   if (!placeToDelete) return next(new HttpError("place does not exist", 404));
 
+  const imageToDelete = placeToDelete.image;
+
   try {
     const session = await mongoose.startSession();
     await session.startTransaction();
@@ -130,6 +139,9 @@ const deletePlaceById = async (req, res, next) => {
   } catch (error) {
     return next(new HttpError(error.message, 500));
   }
+
+  if (imageToDelete !== "uploads/images.default-place.jpeg")
+    fs.unlink(imageToDelete, (e) => {if(e) console.log(e)});
 
   res.status(200).json({ message: "place deleted" });
 };

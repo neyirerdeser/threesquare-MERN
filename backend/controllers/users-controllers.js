@@ -10,7 +10,8 @@ const getUsers = async (req, res, next) => {
   } catch (error) {
     return next(new HttpError(error.message, 500));
   }
-  if (users.length === 0) return next(new HttpError("no users exist", 404));
+  // if (users.length === 0) return next(new HttpError("no users exist", 404));
+  // rather have the frontend say that on the webpage than an error
 
   res.json({ users: users.map((user) => user.toObject({ getters: true })) });
 };
@@ -25,6 +26,7 @@ const signup = async (req, res, next) => {
     name,
     email,
     password,
+    image: req.file ? req.file.path : undefined,
     places: [],
   });
 
