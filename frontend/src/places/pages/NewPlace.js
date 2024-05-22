@@ -19,7 +19,8 @@ import "./PlaceForm.css";
 const NewPlace = () => {
   const auth = useContext(AuthContext); // sets up a listener
   const { isLoading, error, sendRequest, clearError } = useHttpClient();
-  const defaultImage = 'http://localhost:5000/uploads/images/default-place.jpeg'
+  const defaultImage =
+    "http://localhost:5000/uploads/images/default-place.jpeg";
   const [formState, inputHandler] = useForm(
     {
       title: {
@@ -52,12 +53,10 @@ const NewPlace = () => {
       formData.append("address", formState.inputs.address.value);
       formData.append("creator", auth.userId);
       formData.append("image", formState.inputs.image.value);
-      
-      await sendRequest(
-        "http://localhost:5000/api/places",
-        "POST",
-        formData
-      );
+
+      await sendRequest("http://localhost:5000/api/places", "POST", formData, {
+        Authorization: "Bearer " + auth.token,
+      });
       history.push("/");
     } catch (e) {}
   };
@@ -92,7 +91,12 @@ const NewPlace = () => {
           errorText="enter valid adress"
           onInput={inputHandler}
         />
-        <ImageUpload center id="image" onInput={inputHandler} initialValue={defaultImage}/>
+        <ImageUpload
+          center
+          id="image"
+          onInput={inputHandler}
+          initialValue={defaultImage}
+        />
 
         <Button type="submit" disabled={!formState.isValid}>
           add place

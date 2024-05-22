@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useContext } from "react";
 import { useParams } from "react-router-dom";
 import { useForm } from "../../shared/hooks/form-hook";
 import { useHttpClient } from "../../shared/hooks/http-hook";
@@ -10,6 +10,7 @@ import Card from "../../shared/components/UIElements/Card";
 import ErrorModal from "../../shared/components/UIElements/ErrorModal";
 import LoadingSpinner from "../../shared/components/UIElements/LoadingSpinner";
 import ImageUpload from "../../shared/components/FormElements/ImageUpload";
+import { AuthContext } from "../../shared/context/auth-context";
 import {
   VALIDATOR_REQUIRE,
   VALIDATOR_MINLENGTH,
@@ -48,6 +49,7 @@ const DUMMY_PLACES = [
 */
 
 const UpdatePlace = () => {
+  const auth = useContext(AuthContext); // for our token
   const [loadedPlace, setLoadedPlace] = useState();
   const placeId = useParams().pid;
   const { isLoading, error, sendRequest, clearError } = useHttpClient();
@@ -65,7 +67,7 @@ const UpdatePlace = () => {
       image: {
         value: "",
         isValid: false,
-      }
+      },
     },
     false
   );
@@ -113,7 +115,9 @@ const UpdatePlace = () => {
       await sendRequest(
         `http://localhost:5000/api/places/${placeId}`,
         "PATCH",
-        formData
+        formData,
+        { Authorization: "Bearer " + auth.token }
+        // with the prev way of adding data, we had headers for data type, this can be added on to that
       );
       history.push(`/${loadedPlace.creator}/places`);
     } catch (e) {}
@@ -158,7 +162,12 @@ const UpdatePlace = () => {
             initialValue={loadedPlace.description}
             initialValid={true}
           />
-          <ImageUpload center id="image" onInput={inputHandler} initialValue={`http://localhost:5000/${loadedPlace.image}`} />
+          <ImageUpload
+            center
+            id="image"
+            onInput={inputHandler}
+            initialValue={`http://localhost:5000/${loadedPlace.image}`}
+          />
           <Button type="submit" disabled={!formState.isValid}>
             update place
           </Button>
