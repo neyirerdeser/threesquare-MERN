@@ -100,8 +100,14 @@ const updatePlaceById = async (req, res, next) => {
   if (!placeToUpdate)
     return next(new HttpError("could not find said place", 404));
 
+  // the place is established. check if the user who sent the request is the creator
+  if (placeToUpdate.creator.toString() !== req.userData.userId) // creator is a mongoose id object
+    return next(new HttpError("non-authorized user", 401));
+
   if (placeToUpdate.image !== "uploads/images.default-place.jpeg")
-    fs.unlink(placeToUpdate.image, (e) => {if(e) console.log(e)});
+    fs.unlink(placeToUpdate.image, (e) => {
+      if (e) console.log(e);
+    });
 
   placeToUpdate.title = title || placeToUpdate.title;
   placeToUpdate.description = description || placeToUpdate.description;
@@ -121,11 +127,14 @@ const deletePlaceById = async (req, res, next) => {
 
   let placeToDelete;
   try {
-    placeToDelete = await Place.findById(placeId).populate("creator");
+    placeToDelete = await Place.findById(placeId).populate("creator"); // bc of this the .creator hold the user object not id
   } catch (error) {
     return next(new HttpError(error.message, 500));
   }
   if (!placeToDelete) return next(new HttpError("place does not exist", 404));
+
+  if (placeToDelete.creator.id !== req.userData.userId) // id here doesnt refer to oanother mongoose model, hence just a string
+    return next(new HttpError("non-authorized user", 401));
 
   const imageToDelete = placeToDelete.image;
 
@@ -141,7 +150,9 @@ const deletePlaceById = async (req, res, next) => {
   }
 
   if (imageToDelete !== "uploads/images.default-place.jpeg")
-    fs.unlink(imageToDelete, (e) => {if(e) console.log(e)});
+    fs.unlink(imageToDelete, (e) => {
+      if (e) console.log(e);
+    });
 
   res.status(200).json({ message: "place deleted" });
 };

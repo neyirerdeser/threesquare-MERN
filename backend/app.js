@@ -15,7 +15,7 @@ const app = express();
 
 // MIDDLEWARE
 app.use(bodyParser.json()); // adding this up top so that the body is parsed before we reach other endpoints
-app.use("/uploads/images", express.static(path.join('uploads','images'))); // static serving means you return a file
+app.use("/uploads/images", express.static(path.join("uploads", "images"))); // static serving means you return a file
 app.use((req, res, next) => {
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader(
@@ -35,7 +35,14 @@ app.use((req, res, next) => {
 
 // error handling middleware
 app.use((error, req, res, next) => {
-  if (req.file) fs.unlink(req.file.path, (e) => {if(e) console.log(e)}); // error only if the file isnt deleted, dont care enough
+  if (
+    req.file &&
+    req.file.path !== "uploads/images/default-place.jpeg" &&
+    req.file.path !== "uploads/images/default-user.png"
+  )
+    fs.unlink(req.file.path, (e) => {
+      if (e) console.log(e);
+    }); // error only if the file isnt deleted, dont care enough
   if (res.headerSet) return next(error); // you can only send one response. if we've somehow already sent one, we cant send another
   res.status(error.code || 500);
   res.json({ message: error.message || "unknown error. sorry :(" });
