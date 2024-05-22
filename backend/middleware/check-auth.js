@@ -26,12 +26,9 @@ module.exports = (req, res, next) => {
   if(req.method === 'OPTIONS') return next(); 
   let token;
   try {
-    console.log('1: '+req.headers)
     token = req.headers.authorization.split(" ")[1]; // Authorization: 'Bearer TOKEN' so we need the second part
-    console.log('2: '+token)
     if (!token) throw new Error();
     const decodedToken = jwt.verify(token, process.env.PRIVATE_KEY);
-    console.log('3: '+decodedToken)
     req.userData = { userId: decodedToken.userId }; // this is the id os the user WHO SENT THE REQUEST
     next();
   } catch (error) {

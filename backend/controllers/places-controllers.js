@@ -43,7 +43,8 @@ const createPlace = async (req, res, next) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) return next(new HttpError("invalid inputs", 422)); // unprocessible entry
 
-  const { title, description, address, creator } = req.body;
+  const { title, description, address } = req.body;
+  const creator = req.userData.userId;
 
   let coordinates;
   try {
