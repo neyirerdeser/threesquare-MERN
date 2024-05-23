@@ -105,7 +105,7 @@ const updatePlaceById = async (req, res, next) => {
   if (placeToUpdate.creator.toString() !== req.userData.userId) // creator is a mongoose id object
     return next(new HttpError("non-authorized user", 401));
 
-  if (placeToUpdate.image !== "uploads/images.default-place.jpeg")
+  if (placeToUpdate.image !== "uploads/images/default-place.jpeg")
     fs.unlink(placeToUpdate.image, (e) => {
       if (e) console.log(e);
     });
@@ -150,7 +150,7 @@ const deletePlaceById = async (req, res, next) => {
     return next(new HttpError(error.message, 500));
   }
 
-  if (imageToDelete !== "uploads/images.default-place.jpeg")
+  if (imageToDelete !== "uploads/images/default-place.jpeg")
     fs.unlink(imageToDelete, (e) => {
       if (e) console.log(e);
     });
