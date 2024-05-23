@@ -20,7 +20,7 @@ const NewPlace = () => {
   const auth = useContext(AuthContext); // sets up a listener
   const { isLoading, error, sendRequest, clearError } = useHttpClient();
   const defaultImage =
-    "http://localhost:5000/uploads/images/default-place.jpeg";
+    `${process.env.REACT_APP_ASSET_URL}/uploads/images/default-place.jpeg`;
   const [formState, inputHandler] = useForm(
     {
       title: {
@@ -53,7 +53,7 @@ const NewPlace = () => {
       formData.append("address", formState.inputs.address.value);
       formData.append("image", formState.inputs.image.value);
 
-      await sendRequest("http://localhost:5000/api/places", "POST", formData, {
+      await sendRequest(`${process.env.REACT_APP_BACKEND_URL}/places`, "POST", formData, {
         Authorization: "Bearer " + auth.token,
       });
       history.push("/");

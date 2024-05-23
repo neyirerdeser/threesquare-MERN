@@ -76,7 +76,7 @@ const UpdatePlace = () => {
     const fetchPlace = async () => {
       try {
         const responseData = await sendRequest(
-          `http://localhost:5000/api/places/${placeId}`
+          `${process.env.REACT_APP_BACKEND_URL}/places/${placeId}`
         );
         setLoadedPlace(responseData.place);
         // set doesnt take effect immediately so dont use loadedPlace.
@@ -113,7 +113,7 @@ const UpdatePlace = () => {
       formData.append("description", formState.inputs.description.value);
       formData.append("image", formState.inputs.image.value);
       await sendRequest(
-        `http://localhost:5000/api/places/${placeId}`,
+        `${process.env.REACT_APP_BACKEND_URL}/places/${placeId}`,
         "PATCH",
         formData,
         { Authorization: "Bearer " + auth.token }
@@ -166,7 +166,7 @@ const UpdatePlace = () => {
             center
             id="image"
             onInput={inputHandler}
-            initialValue={`http://localhost:5000/${loadedPlace.image}`}
+            initialValue={`${process.env.REACT_APP_ASSET_URL}/${loadedPlace.image}`}
           />
           <Button type="submit" disabled={!formState.isValid}>
             update place

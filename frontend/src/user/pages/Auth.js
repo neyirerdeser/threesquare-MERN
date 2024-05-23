@@ -20,7 +20,7 @@ const Auth = () => {
   const auth = useContext(AuthContext);
   const [isLoginMode, setIsLoginMode] = useState(false); // the mode is login or not (ie signup)
   const { isLoading, error, sendRequest, clearError } = useHttpClient();
-  const defaultImage = 'http://localhost:5000/uploads/images/default-user.png';
+  const defaultImage = `${process.env.REACT_APP_ASSET_URL}/uploads/images/default-user.png`;
   const [formState, inputHandler, setFormData] = useForm(
     {
       email: {
@@ -46,7 +46,7 @@ const Auth = () => {
       let responseData;
       if (isLoginMode) {
         responseData = await sendRequest(
-          "http://localhost:5000/api/users/login",
+          `${process.env.REACT_APP_BACKEND_URL}/users/login`,
           "POST",
           JSON.stringify({
             email: formState.inputs.email.value,
@@ -62,7 +62,7 @@ const Auth = () => {
         formData.append("image", formState.inputs.image.value);
 
         responseData = await sendRequest(
-          "http://localhost:5000/api/users/signup",
+          `${process.env.REACT_APP_BACKEND_URL}/users/signup`,
           "POST",
           formData
         );
