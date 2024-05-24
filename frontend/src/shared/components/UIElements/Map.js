@@ -7,13 +7,14 @@ const Map = (props) => {
   const { center, zoom } = props;
 
   useEffect(() => {
-    // runs after JSX renders
-    // const { Map } = google.maps.importLibrary("maps");
     const map = new window.google.maps.Map(mapRef.current, {
       center: center,
       zoom: zoom,
     });
-    new window.google.maps.marker.AdvancedMarkerElement({ position: center, map: map });
+    new window.google.maps.Marker({ position: center, map });
+    // new window.google.maps.marker.AdvancedMarkerElement({ position: center, map });
+    // this is the new version of the marker 
+    // but it returns undefined most times and i wasn't able to resolve it
   }, [center, zoom]);
 
   return (
